@@ -90,15 +90,17 @@ export default function App() {
           renderItem={({ item }) => (
             <View style={styles.itemRow}>
               <View style={styles.infoColumn}>
-                <Text style={styles.itemText}>{item.title}</Text>
+                <View style={styles.titleRow}>
+                  <Text style={styles.itemText}>{item.title}</Text>
+                  {item.type === 'Movie' && (
+                    <Text style={styles.statusBadge}>
+                      {item.status === 'toWatch' ? 'To Watch' : 'Watched'}
+                    </Text>
+                  )}
+                </View>
                 <Text style={styles.itemSubtext}>
                   {item.type} • {getProviderName(item.providerId)}
                 </Text>
-                {item.type === 'Movie' && (
-                  <Text style={styles.statusBadge}>
-                    Status: {item.status === 'toWatch' ? 'To Watch' : 'Watched'}
-                  </Text>
-                )}
               </View>
 
               {/* Dynamic Logic Controls based on type */}
@@ -135,17 +137,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingTop: 24,
   },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 12,
     textAlign: 'center',
   },
   formContainer: {
-    marginBottom: 20,
-    padding: 15,
+    marginBottom: 6,
+    padding: 12,
     backgroundColor: '#f9f9f9',
     borderRadius: 8,
   },
@@ -156,7 +158,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#fff',
     fontSize: 16,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   subLabel: {
     fontSize: 14,
@@ -166,7 +168,7 @@ const styles = StyleSheet.create({
   providerSelectorRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 15,
+    marginBottom: 4,
   },
   providerButton: {
     paddingHorizontal: 12,
@@ -199,22 +201,27 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 6,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   infoColumn: {
     flex: 1,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   itemText: {
     fontSize: 18,
     fontWeight: '500',
+    flexShrink: 1,
   },
   itemSubtext: {
     fontSize: 14,
@@ -224,7 +231,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     fontSize: 12,
     color: '#888',
-    marginTop: 4,
+    marginLeft: 8,
   },
   controlRow: {
     marginLeft: 10,

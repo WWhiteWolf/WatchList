@@ -2,7 +2,7 @@
 
 ## FIRST THING TO CONFIRM
 
-This clean set of docs (`session-start.md`, this `handoff.md`, `parked-items.md`) was written 2026-06-17 to reset the project onto a working footing after an Expo Go version mismatch sent earlier sessions in circles. **Confirm these docs were committed.** Then Patrick states the one goal for the session.
+Confirm the **2026-06-17 (session 2)** work was committed: the `package.json` version fix and the `App.js` layout changes (see "Files touched" below). Then Patrick states the one goal for the session.
 
 ## What I need to be fresh and synced (read this first)
 
@@ -20,50 +20,49 @@ Once connected, I read the app's code and these tracking docs straight from the 
 
 ## Project — what WatchList is
 
-A low-friction memory aid for tracking what to watch and where it streams. Patrick is 72, retired; he built it the same spirit as Remember When. It must stay modular so it can run on its own now and be folded into Remember When later.
+A low-friction memory aid for tracking what to watch and where it streams. Patrick is retired; he built it in the same spirit as Remember When. It must stay modular so it can run on its own now and be folded into Remember When later.
 
 **What the app does today (verified against the code 2026-06-17):**
 
 - You type a movie or show title, pick a streaming provider (YouTube TV, Netflix, Paramount, HBO), and tap **Add Movie** or **Add TV Show**.
-- **Movies** carry a status you flip between "To Watch" and "Watched."
+- **Movies** carry a status you flip between "To Watch" and "Watched." The status now shows **beside the title** on the same line (label reads "To Watch" / "Watched").
 - **TV shows** track progress with a season/episode count and two buttons, **+Ep** and **+Seas** (+Seas bumps the season and resets the episode to 1).
-- Everything lives in memory only. Nothing is saved when the app closes yet — persistence is parked.
+- The layout was tightened this session — less vertical space throughout, Add buttons spread across the row.
+- Everything lives in memory only. **Nothing is saved when the app closes or reloads yet** — persistence is still parked (see `parked-items.md`). Patrick saw this firsthand: reloading the simulator wiped the list. The real phone will behave the same until persistence is added.
 
-**The code is clean and coherent.** `App.js` (the screen), `useWatchListState.js` (the data/actions hook), and `types.js` (the provider list) all line up with each other. The trouble was never in this logic.
+**The code is clean and coherent.** `App.js` (the screen), `useWatchListState.js` (the data/actions hook), and `types.js` (the provider list) all line up with each other.
 
-## Files in the project
+## CORRECTED root-cause story (important — supersedes the earlier note)
 
-- `App.js` — the single screen: input form, provider selector, and the combined movie/TV list with its controls.
-- `useWatchListState.js` — `useState` for providers, movies, tvShows, plus the actions: `addMovie`, `addTvShow`, `incrementEpisode`, `incrementSeason`, `toggleMovieStatus`.
-- `types.js` — `INITIAL_PROVIDERS` (the four streaming services). (Note: the old `handoff.md` referenced `MOVIE_TEMPLATE`/`TV_SHOW_TEMPLATE` here — they do not exist in the code. Ignore that.)
-- `index.js`, `app.json`, `package.json` — standard Expo entry/config.
+The earlier sessions blamed the trouble on **Expo Go version mismatch**. Running it in the iOS Simulator this session proved that was **not** the real cause. The actual blocker was a **dependency version mismatch inside the project itself**:
 
-## The decision that reset the project (2026-06-17)
+- `package.json` had pinned `react 19.1.8` and `react-native 0.81.6`. React Native requires that `react` and its internal renderer carry the *exact* same version, and those two did not agree (renderer was 19.1.4). The app threw "Incompatible React versions" the instant it tried to render.
+- **Fix applied:** aligned to Expo SDK 54's official tested set — `react 19.1.0`, `react-dom 19.1.0`, `react-native 0.81.5`. Verified in a sandbox that this set is internally consistent (renderer comes out as 19.1.0, matching react). After a clean reinstall (`rm -rf node_modules package-lock.json && npm install`) and `npx expo start --clear`, the app runs clean in the simulator.
+- **Takeaway for the build path:** the original "stop using Expo Go" decision still stands as the long-term direction, but it was solving the wrong problem. The app itself was healthy once the versions matched. Whatever happened on the physical phone earlier may also have been version drift, not Expo Go as such — worth keeping in mind, not re-litigating.
 
-**Stop using Expo Go. Put WatchList on the same build path as Remember When.**
+## Current state
 
-- Expo Go is the ready-made app from the App Store. It runs only ONE version of Expo's engine — whatever that installed copy was built for. When the project sits on a different version than the Expo Go on the phone, the two won't run together. That version collision (Expo Go running ahead of what the project/Apple expected) is what sent earlier sessions chasing their tail. It is not a code bug.
-- Remember When never uses Expo Go. It runs on Patrick's own build through TestFlight, with the matching Expo engine baked in. That path is proven and Patrick knows it.
-- The trouble "continued into EAS" because EAS was never configured here: **there is no `eas.json`, and `app.json` has no iOS bundle id.** A build had nothing to stand on.
+- Runs clean in the **iOS Simulator** (Patrick has Xcode). Quick local check is: `cd ~/Projects/WatchList`, `npm install`, `npx expo start`, press `i`. Use `npx expo start --clear` if a stale bundle is suspected, then Cmd+R / `r` to reload.
+- In the simulator, Expo CLI auto-installs the *matching* Expo Go, so the simulator sidesteps the version-pinning pain a physical-phone App Store Expo Go can hit.
+- Still **no `eas.json`** and **no iOS bundle id** in `app.json` — so a build-to-phone still has nothing to stand on.
 
 ## Active next step (the named goal) — put WatchList on a real build path
 
-Get WatchList running on Patrick's phone the same way Remember When does, instead of Expo Go. Rough shape (to be scoped one step at a time, with Patrick's go before each change):
+Get WatchList running on Patrick's phone the same way Remember When does (his own build via TestFlight), instead of Expo Go. Rough shape, scoped one step at a time with Patrick's go before each change:
 
 1. Decide the iOS bundle id and add it to `app.json` (Remember When uses `com.molliedog.ElderlyAssistant`; WatchList needs its own).
-2. Add `expo-dev-client` and/or an `eas.json` with build profiles, mirroring the Remember When setup.
-3. Confirm the dependency versions install cleanly first — check that `package.json` (`expo ~54`, `react 19.1.8`, `react-native 0.81.6`) matches a real, installable Expo SDK 54 set before building. **Verify, don't assume.**
-4. Build to the device and confirm the app itself runs (it should — the logic is sound).
+2. Add an `eas.json` with build profiles, mirroring the Remember When setup.
+3. Build to the device and confirm the app runs (it should — the logic is sound and now installs/runs clean).
 
-Optional quicker check before all that: run it locally on the computer to confirm the app is fine, separate from any build/device questions.
+**Strong candidate to do next instead / soon after:** persistence (saving the data). Patrick directly felt the pain this session — every reload wipes the list. It's the top parked item and the change that makes the app genuinely useful day to day. Order is Patrick's call; the original plan was build path first, persistence second.
 
-## Files touched this session (2026-06-17)
+## Files touched this session (2026-06-17, session 2)
 
-- `docs/session-start.md` — rewritten clean (standing rules + how we begin).
-- `docs/handoff.md` — this file, written fresh.
-- `docs/parked-items.md` — tidied (see that file).
-- `docs/SPEC-STYLE-RULES.md` — left untouched; it belongs to the Clue/MysteryTracker project and should be skipped.
-- **No app code changed this session.** Patrick commits.
+- `package.json` — version fix: react → 19.1.0, added react-dom 19.1.0, react-native → 0.81.5.
+- `App.js` — movie status moved beside the title ("To Watch" / "Watched"); spacing tightened throughout (header, form, provider row, list rows); Add buttons spread across the row with less vertical space around them.
+- `docs/handoff.md` — this file, rewritten with the corrected root-cause story.
+- **`node_modules` / `package-lock.json`** were regenerated locally by the reinstall (not committed; ignored by `.gitignore`).
+- Patrick commits.
 
 ---
 
@@ -73,8 +72,8 @@ You're picking up my WatchList app (a small Expo / React Native project — a mo
 
 The WatchList folder needs to be connected through Cowork's folder picker — if you can't see it, give me the folder-request button; don't ask me to upload files.
 
-Once it's connected, read `docs/session-start.md` first (our standing rules and how we work), then `docs/handoff.md` (current state, the decisions we've made, and the next job), and skim `docs/parked-items.md` (the someday list). Confirm the last session's work was committed before doing anything.
+Once it's connected, read `docs/session-start.md` first (our standing rules and how we work), then `docs/handoff.md` (current state, the corrected root-cause story, and the next job), and skim `docs/parked-items.md` (the someday list). Confirm the last session's work was committed before doing anything.
 
-The key thing already decided: WatchList will stop using Expo Go and move to the same build-to-my-phone path Remember When uses — EAS isn't set up yet, and that's the first real job. Don't re-litigate that.
+What we proved last session: the app runs clean in the iOS Simulator once the dependency versions were aligned — the old trouble was a react/react-native version mismatch, not Expo Go. The build-to-phone path (EAS + an iOS bundle id) still isn't set up; that and persistence (saving data, which currently doesn't survive a reload) are the two live candidates for the next goal.
 
 Then wait for me to give you the one goal for the session, tell me roughly how heavy it looks, and wait for my "go" before changing anything. One step at a time, plain English, no boxed multiple-choice questions, and I do all the git commits.
