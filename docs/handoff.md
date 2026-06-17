@@ -64,3 +64,17 @@ Optional quicker check before all that: run it locally on the computer to confir
 - `docs/parked-items.md` — tidied (see that file).
 - `docs/SPEC-STYLE-RULES.md` — left untouched; it belongs to the Clue/MysteryTracker project and should be skipped.
 - **No app code changed this session.** Patrick commits.
+
+---
+
+## ▶ PASTE THIS AT THE START OF THE NEXT SESSION
+
+You're picking up my WatchList app (a small Expo / React Native project — a movie & TV show tracker, separate from Remember When for now).
+
+The WatchList folder needs to be connected through Cowork's folder picker — if you can't see it, give me the folder-request button; don't ask me to upload files.
+
+Once it's connected, read `docs/session-start.md` first (our standing rules and how we work), then `docs/handoff.md` (current state, the decisions we've made, and the next job), and skim `docs/parked-items.md` (the someday list). Confirm the last session's work was committed before doing anything.
+
+The key thing already decided: WatchList will stop using Expo Go and move to the same build-to-my-phone path Remember When uses — EAS isn't set up yet, and that's the first real job. Don't re-litigate that.
+
+Then wait for me to give you the one goal for the session, tell me roughly how heavy it looks, and wait for my "go" before changing anything. One step at a time, plain English, no boxed multiple-choice questions, and I do all the git commits.
