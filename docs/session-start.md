@@ -1,19 +1,37 @@
-PROJECT: WatchList App (Cognitive Assistant)
-PATH: patsmactop/projects/WatchList
-USER PROFILE: 71-year-old retired electronic technician/engineer. Prefers concise, direct answers, no judgmental/complimentary filler, one step-by-step task at a time, and minimal tech jargon.
+# Session start — how we begin (WatchList)
 
-PROJECT OVERVIEW:
-This app acts as a low-friction cognitive aid to track what movies/shows to watch and which provider they are on. It must be modular so it can run as a standalone app or be easily integrated into the existing "Remember When" app later.
+## Standing rules (read these first, every session)
 
-WORKFLOW PARAMETERS:
-- Hub: VS Code & local folders.
-- Safety: GitHub commits before/after major changes.
-- Dual-AI: Gemini for planning/architecture; Claude for heavy boilerplate generation via "handoff.txt".
-- Code Rules: Before writing/modifying code, show the plan and ask: "Are you ready?"
-- Version Tags: When pasting snippets or asking for changes, start with "WEB VERSION:" or "PHONE VERSION:".
+- **Patrick does all git commits.** Claude never runs `git commit` or any git write command on this project. Claude makes the edits and leaves them for Patrick to review and commit himself.
+- **No "boxed" multiple-choice questions.** Don't use button/option-card questions — they feel like being locked into Claude's choices. Ask open questions in plain prose and let Patrick answer in his own words.
+- **Verify before asserting.** Read the actual code before describing how anything behaves. Don't guess from a file or function name. When unsure, say "I haven't checked yet" and offer to look.
+- **One change at a time.** Discuss before building; make one edit, stop, let Patrick review before the next.
+- **Plain English, concise.** Patrick is a retired electronic technician/engineer — keep jargon low, sentences short, no filler.
+- **Wait for "go" before building.** Even small changes get discussed first. Don't start writing code until Patrick says go.
 
-CURRENT STATUS:
-Project folder initialized. Ready to define the foundational React Native state structure (`useState`) for providers, TV show progress, and the movie bucket.
+---
 
-NEXT STEP FOR AI:
-Acknowledge these parameters cleanly. Outline the foundational React Native state structure logic and ask if I am ready to implement it.
+## How we start a session
+
+Patrick connects the `WatchList` folder in Cowork's folder picker (folder access does not carry over between sessions). Then he says **"read session-start.md."** Nothing to paste — Claude reads the app's code and these tracking docs straight from the folder.
+
+## What Claude does at the start
+
+1. Read **`docs/handoff.md`** — current state, the active next step, decisions, standing rules.
+2. Skim **`docs/parked-items.md`** — the eventual-work backlog, so deferred items aren't re-raised as new.
+3. Confirm the previous session's work was committed (Patrick commits at session end).
+4. Wait for Patrick's **one goal**, say roughly how heavy it looks, and wait for his "go" before changing anything.
+
+## What Claude does at the end
+
+- Refresh **`docs/handoff.md`** so the next session stays on course, and move any new eventual-work into **`docs/parked-items.md`**.
+- Patrick commits.
+
+## The tracking docs (different jobs)
+
+- **`handoff.md`** — keeps us on course session to session: current state, the active goal, decisions, what just changed.
+- **`parked-items.md`** — the backlog: things to do eventually, not the current goal. When a parked item becomes the live goal, it moves into the handoff; new spin-off work gets parked here.
+
+## One note on leftover files
+
+`docs/SPEC-STYLE-RULES.md` was copied in from a different project (the Clue/MysteryTracker spec). It does not apply to WatchList — skip it. It's left in place only so nothing is deleted without Patrick's say-so.
