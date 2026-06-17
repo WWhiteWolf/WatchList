@@ -2,7 +2,7 @@
 
 ## FIRST THING TO CONFIRM
 
-Confirm the **2026-06-17 (session 2)** work was committed: the `package.json` version fix and the `App.js` layout changes (see "Files touched" below). Then Patrick states the one goal for the session.
+Confirm the **2026-06-17 (session 3)** work was committed: the `app.json` changes (iOS `bundleIdentifier` + the `projectId` EAS added during the build) and the new `eas.json`. See "Files touched" below. Then Patrick states the one goal for the session.
 
 ## What I need to be fresh and synced (read this first)
 
@@ -22,58 +22,64 @@ Once connected, I read the app's code and these tracking docs straight from the 
 
 A low-friction memory aid for tracking what to watch and where it streams. Patrick is retired; he built it in the same spirit as Remember When. It must stay modular so it can run on its own now and be folded into Remember When later.
 
-**What the app does today (verified against the code 2026-06-17):**
+**What the app does today:**
 
 - You type a movie or show title, pick a streaming provider (YouTube TV, Netflix, Paramount, HBO), and tap **Add Movie** or **Add TV Show**.
-- **Movies** carry a status you flip between "To Watch" and "Watched." The status now shows **beside the title** on the same line (label reads "To Watch" / "Watched").
+- **Movies** carry a status you flip between "To Watch" and "Watched," shown beside the title.
 - **TV shows** track progress with a season/episode count and two buttons, **+Ep** and **+Seas** (+Seas bumps the season and resets the episode to 1).
-- The layout was tightened this session — less vertical space throughout, Add buttons spread across the row.
-- Everything lives in memory only. **Nothing is saved when the app closes or reloads yet** — persistence is still parked (see `parked-items.md`). Patrick saw this firsthand: reloading the simulator wiped the list. The real phone will behave the same until persistence is added.
+- Everything lives in memory only. **Nothing is saved when the app closes or reloads yet** — persistence is still parked (see `parked-items.md`).
 
-**The code is clean and coherent.** `App.js` (the screen), `useWatchListState.js` (the data/actions hook), and `types.js` (the provider list) all line up with each other.
+The code is clean and coherent: `App.js` (the screen), `useWatchListState.js` (the data/actions hook), and `types.js` (the provider list) all line up.
 
-## CORRECTED root-cause story (important — supersedes the earlier note)
+## BIG MILESTONE THIS SESSION — WatchList is on a real build path and in TestFlight
 
-The earlier sessions blamed the trouble on **Expo Go version mismatch**. Running it in the iOS Simulator this session proved that was **not** the real cause. The actual blocker was a **dependency version mismatch inside the project itself**:
+The goal "WatchList on my phone" is now most of the way done. What we did:
 
-- `package.json` had pinned `react 19.1.8` and `react-native 0.81.6`. React Native requires that `react` and its internal renderer carry the *exact* same version, and those two did not agree (renderer was 19.1.4). The app threw "Incompatible React versions" the instant it tried to render.
-- **Fix applied:** aligned to Expo SDK 54's official tested set — `react 19.1.0`, `react-dom 19.1.0`, `react-native 0.81.5`. Verified in a sandbox that this set is internally consistent (renderer comes out as 19.1.0, matching react). After a clean reinstall (`rm -rf node_modules package-lock.json && npm install`) and `npx expo start --clear`, the app runs clean in the simulator.
-- **Takeaway for the build path:** the original "stop using Expo Go" decision still stands as the long-term direction, but it was solving the wrong problem. The app itself was healthy once the versions matched. Whatever happened on the physical phone earlier may also have been version drift, not Expo Go as such — worth keeping in mind, not re-litigating.
+1. **Bundle id** — added `"bundleIdentifier": "com.molliedog.WatchList"` to the `ios` block of `app.json` (matches Patrick's Remember When `com.molliedog.*` pattern).
+2. **eas.json** — created it, then matched it line-for-line to Remember When's (Patrick uploaded his copy to compare). Identical now: same development/preview/production build profiles, same `submit.production`, `cli.version >= 18.6.0`, `appVersionSource: remote`.
+3. **First EAS build** — ran `npx eas-cli@latest build --platform ios --profile production`. Created the EAS project (this is what added the `projectId` line to `app.json`), set up Apple credentials + provisioning profile, answered the encryption-compliance prompt as standard/exempt (yes). Build completed successfully.
+4. **Submitted to TestFlight** — ran `npx eas-cli@latest submit --platform ios --profile production`, using Patrick's own App Store Connect API key (Team: Patrick Murphy, Individual). Upload succeeded.
 
-## Current state
+**Where it stands right now:** the build shows **"Processing"** in App Store Connect → WatchList → TestFlight. Patrick accepted a pending Apple Developer Program License Agreement update (it had been flagged with a yellow banner and can hold up builds). 
 
-- Runs clean in the **iOS Simulator** (Patrick has Xcode). Quick local check is: `cd ~/Projects/WatchList`, `npm install`, `npx expo start`, press `i`. Use `npx expo start --clear` if a stale bundle is suspected, then Cmd+R / `r` to reload.
-- In the simulator, Expo CLI auto-installs the *matching* Expo Go, so the simulator sidesteps the version-pinning pain a physical-phone App Store Expo Go can hit.
-- Still **no `eas.json`** and **no iOS bundle id** in `app.json` — so a build-to-phone still has nothing to stand on.
+**Remaining to finish the phone install (next session, or once processing ends):**
+- When the build flips to **Ready to Test**, make sure Patrick's own Apple ID is in the **Internal Testing** group on the TestFlight tab (internal testers install with no Apple review).
+- Open the **TestFlight app** on the iPhone (same Apple ID) → WatchList → **Install**.
+- Note: the public App Store "Prepare for Submission" page (screenshots, metadata, Add for Review) is NOT needed for TestFlight — ignore it.
 
-## Active next step (the named goal) — put WatchList on a real build path
+## Security housekeeping done this session
 
-Get WatchList running on Patrick's phone the same way Remember When does (his own build via TestFlight), instead of Expo Go. Rough shape, scoped one step at a time with Patrick's go before each change:
+- GitHub flagged a **Google API Key** secret in repo `WWhiteWolf/WatchList`. Verified it: it's **not Patrick's** — it's a key baked into React Native's bundled Chrome dev-tools (`node_modules/@react-native/.../crux-manager.js`), only present because early commits had committed `node_modules`. Current code does not track `node_modules` (it's git-ignored). Nothing of Patrick's exposed; nothing to rotate. Patrick **dismissed the alert** on GitHub (now 0 open / 1 closed).
+- Patrick **enabled Dependabot alerts** (notify-only). Left the auto-PR options (security updates, grouped, version updates) off to avoid PR noise.
 
-1. Decide the iOS bundle id and add it to `app.json` (Remember When uses `com.molliedog.ElderlyAssistant`; WatchList needs its own).
-2. Add an `eas.json` with build profiles, mirroring the Remember When setup.
-3. Build to the device and confirm the app runs (it should — the logic is sound and now installs/runs clean).
+## Current state of the build tooling
 
-**Strong candidate to do next instead / soon after:** persistence (saving the data). Patrick directly felt the pain this session — every reload wipes the list. It's the top parked item and the change that makes the app genuinely useful day to day. Order is Patrick's call; the original plan was build path first, persistence second.
+- `app.json` now has the iOS `bundleIdentifier` and the EAS `projectId`.
+- `eas.json` exists and matches Remember When.
+- App still runs clean in the iOS Simulator (`npm install`, `npx expo start`, press `i`; use `--clear` if a stale bundle is suspected).
 
-## Files touched this session (2026-06-17, session 2)
+## Files touched this session (2026-06-17, session 3)
 
-- `package.json` — version fix: react → 19.1.0, added react-dom 19.1.0, react-native → 0.81.5.
-- `App.js` — movie status moved beside the title ("To Watch" / "Watched"); spacing tightened throughout (header, form, provider row, list rows); Add buttons spread across the row with less vertical space around them.
-- `docs/handoff.md` — this file, rewritten with the corrected root-cause story.
-- **`node_modules` / `package-lock.json`** were regenerated locally by the reinstall (not committed; ignored by `.gitignore`).
+- `app.json` — added iOS `bundleIdentifier`; EAS added a `projectId` during the build.
+- `eas.json` — new file, matched to Remember When.
+- `docs/handoff.md` — this file.
 - Patrick commits.
+
+## Two live candidates for the NEXT goal
+
+1. **Finish the phone install** — just the TestFlight tester + install steps above; small, mostly waiting on Apple processing.
+2. **Persistence (saving data)** — top parked item. Every reload still wipes the list. Mirror how Remember When stores its lists (a storage key per list, load on start, save on every change). This is the change that makes the app genuinely useful day to day.
 
 ---
 
 ## ▶ PASTE THIS AT THE START OF THE NEXT SESSION
 
-You're picking up my WatchList app (a small Expo / React Native project — a movie & TV show tracker, separate from Remember When for now).
+You're picking up my WatchList app (a small Expo / React Native movie & TV show tracker, separate from Remember When for now).
 
 The WatchList folder needs to be connected through Cowork's folder picker — if you can't see it, give me the folder-request button; don't ask me to upload files.
 
-Once it's connected, read `docs/session-start.md` first (our standing rules and how we work), then `docs/handoff.md` (current state, the corrected root-cause story, and the next job), and skim `docs/parked-items.md` (the someday list). Confirm the last session's work was committed before doing anything.
+Once it's connected, read `docs/session-start.md` first (standing rules and how we work), then `docs/handoff.md` (current state and next job), and skim `docs/parked-items.md` (the someday list). Confirm last session's work was committed before doing anything.
 
-What we proved last session: the app runs clean in the iOS Simulator once the dependency versions were aligned — the old trouble was a react/react-native version mismatch, not Expo Go. The build-to-phone path (EAS + an iOS bundle id) still isn't set up; that and persistence (saving data, which currently doesn't survive a reload) are the two live candidates for the next goal.
+Last session we got WatchList onto a real build path: added an iOS bundle id and an eas.json, ran the first EAS build, and submitted it to TestFlight — it was "Processing" in App Store Connect when we stopped. The remaining bit is making sure I'm an internal tester and installing it from the TestFlight app on my phone. The other live candidate is persistence (saving data, which still doesn't survive a reload).
 
-Then wait for me to give you the one goal for the session, tell me roughly how heavy it looks, and wait for my "go" before changing anything. One step at a time, plain English, no boxed multiple-choice questions, and I do all the git commits.
+Then wait for me to give you the one goal, tell me roughly how heavy it looks, and wait for my "go" before changing anything. One step at a time, plain English, no boxed multiple-choice questions, and I do all the git commits.

@@ -7,8 +7,17 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.molliedog.WatchList",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
-    "android": {}
+    "android": {},
+    "extra": {
+      "eas": {
+        "projectId": "3bc31e84-9a99-4eb0-8556-852c90550322"
+      }
+    }
   }
 }
