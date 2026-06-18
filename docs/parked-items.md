@@ -18,6 +18,8 @@ This is the "someday" list: worth doing eventually, but not what we're working o
 
 - **Provider niceties (low priority).** Things like syncing or deep-linking to a streaming service. Nice-to-have, not needed for the core tool.
 
+- **Inset the "Tracking Items" list from the screen edges (UI fix, found on the real phone).** On the device, the "Tracking Items" heading and the list rows below it sit right at the screen's outer margin and feel too close to both sides. Cause: the form card up top has its own extra inset, but the list area (`listContainer` in `App.js`) has no left/right padding of its own, so it hugs the 20pt screen edge. Fix: give the list section its own horizontal padding so the heading and rows line up with the form's comfortable inset. Small, isolated change. (Patrick verified the movie "To Watch"/"Watched" labels are working fine — no change needed there.)
+
 ---
 
 ## Notes for whoever picks these up

@@ -40,7 +40,13 @@ The goal "WatchList on my phone" is now most of the way done. What we did:
 3. **First EAS build** — ran `npx eas-cli@latest build --platform ios --profile production`. Created the EAS project (this is what added the `projectId` line to `app.json`), set up Apple credentials + provisioning profile, answered the encryption-compliance prompt as standard/exempt (yes). Build completed successfully.
 4. **Submitted to TestFlight** — ran `npx eas-cli@latest submit --platform ios --profile production`, using Patrick's own App Store Connect API key (Team: Patrick Murphy, Individual). Upload succeeded.
 
-**Where it stands right now:** the build shows **"Processing"** in App Store Connect → WatchList → TestFlight. Patrick accepted a pending Apple Developer Program License Agreement update (it had been flagged with a yellow banner and can hold up builds). 
+**Where it stands right now (TestFlight processing is the open issue):** there are now **two** uploads in App Store Connect → WatchList → TestFlight, both stuck on **"Processing"**:
+- **1.0.0 (1)** — uploaded ~4:33 PM, *before* Patrick accepted the updated license agreement. Builds uploaded before accepting can sit in Processing forever. **Ignore this one** — it's likely dead.
+- **1.0.0 (2)** — uploaded ~6:58 PM, *after* accepting the agreement. **This is the real one to watch.** It was only ~1 hour into Processing when we stopped, which is still normal.
+
+Patrick accepted a pending **Apple Developer Program License Agreement** update mid-session (it had a yellow banner and can hold up builds). He checked email (incl. trash) — no error/ITMS message from Apple. We did NOT send more builds (two is plenty; more won't speed the queue).
+
+**Plan when resuming:** check whether **1.0.0 (2)** has flipped to **Ready to Test**. If yes → add Patrick's Apple ID to the **Internal Testing** group, then install from the TestFlight app on his phone. If **(2)** is *still* Processing the next day, that's the point to check Apple's **system status page** and/or contact **Apple developer support** — at that stage it's an Apple-side problem, not the app. Do NOT keep uploading new builds to try to force it.
 
 **Remaining to finish the phone install (next session, or once processing ends):**
 - When the build flips to **Ready to Test**, make sure Patrick's own Apple ID is in the **Internal Testing** group on the TestFlight tab (internal testers install with no Apple review).
