@@ -2,7 +2,7 @@
 
 ## FIRST THING TO CONFIRM
 
-Confirm the **2026-06-17 (session 3)** work was committed: the `app.json` changes (iOS `bundleIdentifier` + the `projectId` EAS added during the build) and the new `eas.json`. See "Files touched" below. Then Patrick states the one goal for the session.
+The **persistence + spacing** work (session 4) is already committed — `git log` shows **"Data Persist & screen padding."** (`useWatchListState.js`, `App.js`, `package.json`). Only the **docs updates** from session 4 remain to be committed (this file + `parked-items.md`). Confirm those got committed, then Patrick states the one goal.
 
 ## What I need to be fresh and synced (read this first)
 
@@ -20,72 +20,74 @@ Once connected, I read the app's code and these tracking docs straight from the 
 
 ## Project — what WatchList is
 
-A low-friction memory aid for tracking what to watch and where it streams. Patrick is retired; he built it in the same spirit as Remember When. It must stay modular so it can run on its own now and be folded into Remember When later.
+A low-friction memory aid for tracking what to watch and where it streams. Patrick is retired; he built it in the same spirit as Remember When (the `elderlyassistant` project). It must stay modular so it can run on its own now and be folded into Remember When later.
 
 **What the app does today:**
 
 - You type a movie or show title, pick a streaming provider (YouTube TV, Netflix, Paramount, HBO), and tap **Add Movie** or **Add TV Show**.
 - **Movies** carry a status you flip between "To Watch" and "Watched," shown beside the title.
 - **TV shows** track progress with a season/episode count and two buttons, **+Ep** and **+Seas** (+Seas bumps the season and resets the episode to 1).
-- Everything lives in memory only. **Nothing is saved when the app closes or reloads yet** — persistence is still parked (see `parked-items.md`).
+- **Data now persists.** Movies, shows, and progress are saved to the device and survive closing/reloading the app. (New this session — see below.)
 
 The code is clean and coherent: `App.js` (the screen), `useWatchListState.js` (the data/actions hook), and `types.js` (the provider list) all line up.
 
-## BIG MILESTONE THIS SESSION — WatchList is on a real build path and in TestFlight
+## BIG ITEM THIS SESSION (session 4) — persistence is DONE
 
-The goal "WatchList on my phone" is now most of the way done. What we did:
+The top parked item is finished. WatchList now saves its data.
 
-1. **Bundle id** — added `"bundleIdentifier": "com.molliedog.WatchList"` to the `ios` block of `app.json` (matches Patrick's Remember When `com.molliedog.*` pattern).
-2. **eas.json** — created it, then matched it line-for-line to Remember When's (Patrick uploaded his copy to compare). Identical now: same development/preview/production build profiles, same `submit.production`, `cli.version >= 18.6.0`, `appVersionSource: remote`.
-3. **First EAS build** — ran `npx eas-cli@latest build --platform ios --profile production`. Created the EAS project (this is what added the `projectId` line to `app.json`), set up Apple credentials + provisioning profile, answered the encryption-compliance prompt as standard/exempt (yes). Build completed successfully.
-4. **Submitted to TestFlight** — ran `npx eas-cli@latest submit --platform ios --profile production`, using Patrick's own App Store Connect API key (Team: Patrick Murphy, Individual). Upload succeeded.
+1. **Storage library** — added `@react-native-async-storage/async-storage`, pinned to **`2.2.0`** in `package.json` to match Remember When. (Note: `npx expo install` couldn't reach Expo's compatibility checker from the workspace, so it was installed directly with npm. 2.2.0 is the correct version for SDK 54.)
+2. **`useWatchListState.js` rewritten to mirror Remember When's pattern** — exactly how `elderlyassistant` screens (shopping.tsx, todo.tsx, etc.) do it:
+   - A `loadData()` runs once on mount (in a `useEffect`), reading the saved lists back and only setting state `if (saved)`.
+   - `saveMovies(m)` / `saveTvShows(t)` each update state **and** write to AsyncStorage in the same step.
+   - All five actions (addMovie, addTvShow, incrementEpisode, incrementSeason, toggleMovieStatus) call those save functions, so data is written the instant anything changes.
+   - This is why **no "hydration guard" is needed** — saving only happens inside explicit actions, never on the empty first render.
+   - Keys: **`watchlist_movies`** and **`watchlist_shows`**. Providers are NOT persisted (they're the static `INITIAL_PROVIDERS` list).
+3. **Tested in the iOS Simulator** — Patrick confirmed items survive a reload. ✓
 
-**Where it stands right now (TestFlight processing is the open issue):** there are now **two** uploads in App Store Connect → WatchList → TestFlight, both stuck on **"Processing"**:
-- **1.0.0 (1)** — uploaded ~4:33 PM, *before* Patrick accepted the updated license agreement. Builds uploaded before accepting can sit in Processing forever. **Ignore this one** — it's likely dead.
-- **1.0.0 (2)** — uploaded ~6:58 PM, *after* accepting the agreement. **This is the real one to watch.** It was only ~1 hour into Processing when we stopped, which is still normal.
+## ALSO DONE THIS SESSION — the "Tracking Items" edge-spacing fix
 
-Patrick accepted a pending **Apple Developer Program License Agreement** update mid-session (it had a yellow banner and can hold up builds). He checked email (incl. trash) — no error/ITMS message from Apple. We did NOT send more builds (two is plenty; more won't speed the queue).
+The parked UI item is finished. The list area used to hug the screen edges because `listContainer` in `App.js` had no horizontal padding, while the form card above it did. Fix: added `paddingHorizontal: 12` to `listContainer`, so the heading and rows line up with the form's inset. Patrick confirmed it looks better. ✓
 
-**Plan when resuming:** check whether **1.0.0 (2)** has flipped to **Ready to Test**. If yes → add Patrick's Apple ID to the **Internal Testing** group, then install from the TestFlight app on his phone. If **(2)** is *still* Processing the next day, that's the point to check Apple's **system status page** and/or contact **Apple developer support** — at that stage it's an Apple-side problem, not the app. Do NOT keep uploading new builds to try to force it.
+## RESOLVED — new version is on the phone
 
-**Remaining to finish the phone install (next session, or once processing ends):**
-- When the build flips to **Ready to Test**, make sure Patrick's own Apple ID is in the **Internal Testing** group on the TestFlight tab (internal testers install with no Apple review).
-- Open the **TestFlight app** on the iPhone (same Apple ID) → WatchList → **Install**.
-- Note: the public App Store "Prepare for Submission" page (screenshots, metadata, Add for Review) is NOT needed for TestFlight — ignore it.
+The Expo build limit that blocked the phone install is no longer an issue. Patrick **upgraded his Expo plan**, then built and loaded the new (persistence) version onto his **physical phone**.
 
-## Security housekeeping done this session
-
-- GitHub flagged a **Google API Key** secret in repo `WWhiteWolf/WatchList`. Verified it: it's **not Patrick's** — it's a key baked into React Native's bundled Chrome dev-tools (`node_modules/@react-native/.../crux-manager.js`), only present because early commits had committed `node_modules`. Current code does not track `node_modules` (it's git-ignored). Nothing of Patrick's exposed; nothing to rotate. Patrick **dismissed the alert** on GitHub (now 0 open / 1 closed).
-- Patrick **enabled Dependabot alerts** (notify-only). Left the auto-PR options (security updates, grouped, version updates) off to avoid PR noise.
+- On the real device: **the padding looks right and data is saving.** ✓
+- So persistence and the spacing fix are now confirmed on both the Simulator **and** the actual phone.
+- The old "Processing" TestFlight uploads from session 3 (1.0.0 (1) and (2)) are moot — they predate persistence and were superseded by this build.
 
 ## Current state of the build tooling
 
-- `app.json` now has the iOS `bundleIdentifier` and the EAS `projectId`.
+- `app.json` has the iOS `bundleIdentifier` (`com.molliedog.WatchList`) and the EAS `projectId`.
 - `eas.json` exists and matches Remember When.
-- App still runs clean in the iOS Simulator (`npm install`, `npx expo start`, press `i`; use `--clear` if a stale bundle is suspected).
+- App runs clean in the iOS Simulator (`npm install`, `npx expo start`, press `i`; `r` to reload; use `--clear` if a stale bundle is suspected).
 
-## Files touched this session (2026-06-17, session 3)
+## Files touched this session (2026-06-17, session 4)
 
-- `app.json` — added iOS `bundleIdentifier`; EAS added a `projectId` during the build.
-- `eas.json` — new file, matched to Remember When.
-- `docs/handoff.md` — this file.
-- Patrick commits.
+- `package.json` — added `@react-native-async-storage/async-storage` at `2.2.0`.
+- `useWatchListState.js` — added load-on-start + save-on-change persistence (Remember When pattern).
+- `App.js` — added `paddingHorizontal: 12` to `listContainer`.
+- `docs/handoff.md` + `docs/parked-items.md` — these updates (commit pending).
+- Code already committed as "Data Persist & screen padding."; docs commit still to do.
 
-## Two live candidates for the NEXT goal
+## Candidates for the NEXT goal
 
-1. **Finish the phone install** — just the TestFlight tester + install steps above; small, mostly waiting on Apple processing.
-2. **Persistence (saving data)** — top parked item. Every reload still wipes the list. Mirror how Remember When stores its lists (a storage key per list, load on start, save on every change). This is the change that makes the app genuinely useful day to day.
+The two big things — persistence and the phone install — are both done. Remaining parked work:
+
+1. **Polish the look** — cleaner, higher-contrast layout; group movies (To Watch vs Watched) and TV shows into clear sections; bigger tap targets. (Parked.)
+2. **Fold WatchList into Remember When** — once it's solid standalone, bring it in as another screen. (Parked; do last.)
+3. **Provider niceties** — syncing or deep-linking to a streaming service. (Low priority.)
 
 ---
 
 ## ▶ PASTE THIS AT THE START OF THE NEXT SESSION
 
-You're picking up my WatchList app (a small Expo / React Native movie & TV show tracker, separate from Remember When for now).
+You're picking up my WatchList app (a small Expo / React Native movie & TV show tracker, separate from Remember When / elderlyassistant for now).
 
 The WatchList folder needs to be connected through Cowork's folder picker — if you can't see it, give me the folder-request button; don't ask me to upload files.
 
 Once it's connected, read `docs/session-start.md` first (standing rules and how we work), then `docs/handoff.md` (current state and next job), and skim `docs/parked-items.md` (the someday list). Confirm last session's work was committed before doing anything.
 
-Last session we got WatchList onto a real build path: added an iOS bundle id and an eas.json, ran the first EAS build, and submitted it to TestFlight — it was "Processing" in App Store Connect when we stopped. The remaining bit is making sure I'm an internal tester and installing it from the TestFlight app on my phone. The other live candidate is persistence (saving data, which still doesn't survive a reload).
+Last session we added data persistence (the app now saves movies, shows, and progress so they survive a reload — done the same way as Remember When) and fixed the "Tracking Items" list hugging the screen edges. I upgraded my Expo plan, built it, and loaded it on my physical phone — the padding looks right and data is saving on the device. So persistence and the phone install are both done and confirmed.
 
 Then wait for me to give you the one goal, tell me roughly how heavy it looks, and wait for my "go" before changing anything. One step at a time, plain English, no boxed multiple-choice questions, and I do all the git commits.
